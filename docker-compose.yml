@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  database:
+    image: postgres:13
+    ports:
+      - 5123:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pxtm0222
+      POSTGRES_DB: grades
+    networks:
+      - grades_network
+networks:
+  grades_network:
