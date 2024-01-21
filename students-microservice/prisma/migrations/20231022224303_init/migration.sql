@@ -8,3 +8,5 @@ CREATE TABLE "Grade" (
 
     CONSTRAINT "Grade_pkey" PRIMARY KEY ("id")
 );
+
+

@@ -1,14 +1,52 @@
 version: '3.8'
-services:
-  database:
-    image: postgres:13
-    ports:
-      - 5123:5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: pxtm0222
-      POSTGRES_DB: grades
-    networks:
-      - grades_network
 networks:
-  grades_network:
+    grades_network:
+services:
+    nats:
+        image: nats
+        ports:
+            - 4222:4222
+        networks:
+            - grades_network
+    database:
+        image: postgres:13
+        ports:
+            - 5123:5123
+        container_name: 'database'
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: pxtm0222
+            POSTGRES_DB: grades
+        networks:
+            - grades_network
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -q -d grades -U postgres']
+    http_gateway:
+        build: ./http-gateway
+        ports:
+            - 8080:8080
+        volumes:
+            - ./http-gateway/src:/usr/src/app/src
+        command: npm run start:dev
+        networks:
+            - grades_network
+    students_microservice:
+        build: ./students-microservice
+        container_name: students_microservice
+        volumes:
+            - ./students-microservice/src:/usr/src/app/src
+        depends_on:
+            database:
+                condition: service_healthy
+        command:
+            - /bin/sh
+            - -c
+            - |
+                npm run db-migrate
+                sleep 10
+                npm run start:dev
+        restart: always
+        links:
+            - database
+        networks:
+            - grades_network
